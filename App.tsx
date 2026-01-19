@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { INITIAL_INPUT, KERNELS } from './constants';
-import { Coordinates, Matrix } from './types';
+import { Coordinates, Matrix, Language } from './types';
 import { Grid } from './components/Grid';
 import { MathPanel } from './components/MathPanel';
 import { explainConvolution } from './services/geminiService';
+import { TRANSLATIONS } from './translations';
 
 const App: React.FC = () => {
   // State
+  const [lang, setLang] = useState<Language>('ru');
   const [inputMatrix] = useState<Matrix>(INITIAL_INPUT);
   const [selectedKernelIndex, setSelectedKernelIndex] = useState(0);
   const [outputMatrix, setOutputMatrix] = useState<Matrix>([]);
@@ -20,6 +22,7 @@ const App: React.FC = () => {
   const [explanation, setExplanation] = useState<string>("");
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
 
+  const t = TRANSLATIONS[lang];
   const currentKernel = KERNELS[selectedKernelIndex];
 
   // Helper: Perform full convolution
@@ -108,7 +111,8 @@ const App: React.FC = () => {
     setExplanation("");
     
     const text = await explainConvolution(
-      currentKernel.name,
+      lang,
+      currentKernel.name[lang],
       activeInputSlice,
       currentKernel.matrix,
       activeResult
@@ -116,6 +120,10 @@ const App: React.FC = () => {
     
     setExplanation(text);
     setIsLoadingExplanation(false);
+  };
+
+  const toggleLanguage = () => {
+    setLang(prev => prev === 'ru' ? 'en' : 'ru');
   };
 
   return (
@@ -126,14 +134,22 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-              Визуализация Свертки (CNN)
+              {t.title}
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Как компьютеры "видят" признаки изображений с помощью математики.
+              {t.subtitle}
             </p>
           </div>
 
           <div className="flex items-center space-x-3">
+             <button
+                onClick={toggleLanguage}
+                className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wide transition-colors"
+                title={lang === 'ru' ? "Switch to English" : "Переключить на Русский"}
+             >
+                {lang === 'ru' ? 'EN' : 'RU'}
+             </button>
+
              <button 
                onClick={() => setIsAnimating(!isAnimating)}
                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center ${
@@ -145,12 +161,12 @@ const App: React.FC = () => {
                {isAnimating ? (
                  <>
                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                   Пауза
+                   {t.animationPause}
                  </>
                ) : (
                  <>
                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                   Анимация
+                   {t.animationStart}
                  </>
                )}
              </button>
@@ -162,11 +178,11 @@ const App: React.FC = () => {
         
         {/* Controls */}
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <label className="block text-sm font-semibold text-slate-700 mb-2">Выберите фильтр (ядро):</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">{t.selectFilter}</label>
           <div className="flex flex-wrap gap-2">
             {KERNELS.map((k, idx) => (
               <button
-                key={k.name}
+                key={k.name.en} // Use stable key
                 onClick={() => setSelectedKernelIndex(idx)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   selectedKernelIndex === idx 
@@ -174,12 +190,12 @@ const App: React.FC = () => {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {k.name}
+                {k.name[lang]}
               </button>
             ))}
           </div>
           <p className="mt-3 text-slate-600 text-sm">
-            <span className="font-semibold">Описание:</span> {currentKernel.description}
+            <span className="font-semibold">{t.descriptionLabel}</span> {currentKernel.description[lang]}
           </p>
         </div>
 
@@ -188,32 +204,34 @@ const App: React.FC = () => {
           
           {/* Input */}
           <div className="relative group">
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">ВХОД (Input)</div>
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{t.inputTitle}</div>
             <Grid 
               data={inputMatrix} 
-              title="Исходное изображение"
+              title={t.inputLabel}
               colorTheme="blue"
               highlightRegion={activeOutputCoord ? {
                 topLeft: { row: activeOutputCoord.row, col: activeOutputCoord.col },
                 size: 3
               } : undefined}
+              loadingMessage={t.loading}
             />
           </div>
 
           {/* Operation Symbol */}
           <div className="flex flex-col items-center justify-center text-slate-400 font-bold text-xl">
              <span className="mb-2">∗</span>
-             <span className="text-xs font-normal opacity-50">Свертка</span>
+             <span className="text-xs font-normal opacity-50">{t.convolution}</span>
           </div>
 
           {/* Kernel */}
           <div className="relative">
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">ЯДРО (Kernel)</div>
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">{t.kernelTitle}</div>
             <Grid 
               data={currentKernel.matrix} 
-              title="Фильтр 3x3" 
+              title={t.kernelLabel}
               colorTheme="red"
               highlightRegion={activeOutputCoord ? { topLeft: {row:0, col:0}, size: 3} : undefined}
+              loadingMessage={t.loading}
             />
           </div>
 
@@ -222,17 +240,17 @@ const App: React.FC = () => {
 
           {/* Output */}
           <div className="relative">
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">ВЫХОД (Feature Map)</div>
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">{t.outputTitle}</div>
             <Grid 
               data={outputMatrix} 
-              title="Карта признаков" 
+              title={t.outputLabel}
               colorTheme="green"
               activeCell={activeOutputCoord || undefined}
               onCellHover={(r, c) => {
                 setIsAnimating(false);
                 setHoveredOutputCell({ row: r, col: c });
               }}
-              // Removed onCellLeave to make selection sticky so user can click the AI button
+              loadingMessage={t.loading}
             />
           </div>
         </div>
@@ -245,6 +263,12 @@ const App: React.FC = () => {
             inputSlice={activeInputSlice} 
             kernel={currentKernel.matrix}
             result={activeResult}
+            labels={{
+                title: t.mathTitle,
+                sum: t.mathSum,
+                explanation: t.mathExplanation,
+                placeholder: t.mathPlaceholder
+            }}
           />
 
           {/* AI Explanation */}
@@ -252,13 +276,13 @@ const App: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-800 flex items-center">
                 <span className="bg-gradient-to-r from-pink-500 to-violet-500 text-transparent bg-clip-text mr-2">✦</span>
-                AI Объяснение
+                {t.aiTitle}
               </h3>
             </div>
             
             <div className="flex-1 bg-slate-50 rounded-lg p-4 mb-4 border border-slate-100 min-h-[120px] text-sm text-slate-700 leading-relaxed">
               {!activeOutputCoord ? (
-                 <p className="text-slate-400 italic">Наведите на ячейку справа или запустите анимацию, чтобы получить объяснение шага.</p>
+                 <p className="text-slate-400 italic">{t.aiPlaceholder}</p>
               ) : explanation ? (
                  <div className="prose prose-sm max-w-none text-slate-700">
                     {explanation.split('\n').map((line, i) => <p key={i} className="mb-2 last:mb-0">{line}</p>)}
@@ -268,11 +292,11 @@ const App: React.FC = () => {
                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-100"></div>
                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-200"></div>
-                   <span>AI думает...</span>
+                   <span>{t.aiLoading}</span>
                  </div>
               ) : (
                 <p className="text-slate-500">
-                  Нажмите кнопку ниже, чтобы узнать, что означает результат <span className="font-bold font-mono">{activeResult}</span> для фильтра "{currentKernel.name}".
+                  {t.aiCtaStart} <span className="font-bold font-mono">{activeResult}</span> {t.aiCtaEnd} "{currentKernel.name[lang]}".
                 </p>
               )}
             </div>
@@ -289,17 +313,17 @@ const App: React.FC = () => {
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Объяснить этот шаг</span>
+              <span>{t.explainButton}</span>
             </button>
             {!process.env.API_KEY && (
-               <p className="text-xs text-red-400 mt-2 text-center">API Key не найден. AI функции недоступны.</p>
+               <p className="text-xs text-red-400 mt-2 text-center">{t.apiKeyError}</p>
             )}
           </div>
 
         </div>
 
         <div className="text-center text-slate-400 text-xs py-8">
-           Матричная свертка - основа компьютерного зрения.
+           {t.footer}
         </div>
       </main>
     </div>

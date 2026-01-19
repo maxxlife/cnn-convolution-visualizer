@@ -14,6 +14,7 @@ interface GridProps {
   onCellHover?: (row: number, col: number) => void;
   onCellLeave?: () => void;
   scale?: number;
+  loadingMessage?: string;
 }
 
 export const Grid: React.FC<GridProps> = ({
@@ -24,7 +25,7 @@ export const Grid: React.FC<GridProps> = ({
   colorTheme,
   onCellHover,
   onCellLeave,
-  scale = 1
+  loadingMessage = "Loading..."
 }) => {
   // Guard against empty data to prevent render errors
   if (!data || data.length === 0 || !data[0]) {
@@ -32,7 +33,7 @@ export const Grid: React.FC<GridProps> = ({
       <div className="flex flex-col items-center">
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">{title}</h3>
         <div className="w-full h-full min-w-[200px] min-h-[200px] flex items-center justify-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
-          Загрузка...
+          {loadingMessage}
         </div>
       </div>
     );

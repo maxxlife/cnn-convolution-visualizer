@@ -1,9 +1,16 @@
 export type Matrix = number[][];
 
+export type Language = 'ru' | 'en';
+
+export interface LocalizedString {
+  ru: string;
+  en: string;
+}
+
 export interface KernelPreset {
-  name: string;
+  name: LocalizedString;
   matrix: Matrix;
-  description: string;
+  description: LocalizedString;
 }
 
 export interface Coordinates {

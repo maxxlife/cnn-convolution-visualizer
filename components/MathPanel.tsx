@@ -5,13 +5,19 @@ interface MathPanelProps {
   inputSlice: Matrix | null;
   kernel: Matrix;
   result: number | null;
+  labels: {
+    title: string;
+    sum: string;
+    explanation: string;
+    placeholder: string;
+  }
 }
 
-export const MathPanel: React.FC<MathPanelProps> = ({ inputSlice, kernel, result }) => {
+export const MathPanel: React.FC<MathPanelProps> = ({ inputSlice, kernel, result, labels }) => {
   if (!inputSlice || result === null) {
     return (
       <div className="h-full flex items-center justify-center text-slate-400 text-sm italic p-6 border-2 border-dashed border-slate-200 rounded-xl">
-        Наведите курсор на выходную матрицу (справа), чтобы увидеть расчет.
+        {labels.placeholder}
       </div>
     );
   }
@@ -47,7 +53,7 @@ export const MathPanel: React.FC<MathPanelProps> = ({ inputSlice, kernel, result
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
         </svg>
-        Математика шага (Dot Product)
+        {labels.title}
       </h3>
       
       <div className="flex flex-wrap gap-2 justify-center mb-6">
@@ -55,12 +61,12 @@ export const MathPanel: React.FC<MathPanelProps> = ({ inputSlice, kernel, result
       </div>
 
       <div className="flex items-center justify-center space-x-4 pt-4 border-t border-slate-100">
-        <span className="text-slate-500 uppercase text-sm font-semibold">Сумма:</span>
+        <span className="text-slate-500 uppercase text-sm font-semibold">{labels.sum}</span>
         <span className="text-3xl font-mono font-bold text-green-600">{sum}</span>
       </div>
       
       <p className="text-center text-xs text-slate-400 mt-2">
-        (Сумма всех произведений = Значение пикселя в карте признаков)
+        {labels.explanation}
       </p>
     </div>
   );
