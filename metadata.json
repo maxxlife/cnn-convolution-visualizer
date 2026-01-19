@@ -1,0 +1,5 @@
+{
+  "name": "cnn-convolution-visualizer",
+  "description": "Интерактивная визуализация работы сверточных сетей (CNN) с объяснениями от Google Gemini AI. Interactive CNN visualization.",
+  "requestFramePermissions": []
+}
